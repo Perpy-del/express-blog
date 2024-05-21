@@ -3,12 +3,13 @@ var router = express.Router();
 var fs = require('fs');
 const { parse, isSameDay, isBefore } = require("date-fns");
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
+/* categories */
+router.get('/:category_slug', function (req, res, next) {
+  
   let rawdata = fs.readFileSync('./database/posts.json');
 
   let data = JSON.parse(rawdata).sort(function (a, b) {
-    let dateOne = parse(a.created_at, 'yyyy-MM-dd', new Date())
+    let dateOne = parse(a.created_at, 'yyyy-MM-dd', new Date());
 
     let dateTwo = parse(b.created_at, 'yyyy-MM-dd', new Date());
 
@@ -31,20 +32,22 @@ router.get('/', function(req, res, next) {
 
   let navigationLinks = Array.from(navigationSet).map(item => JSON.parse(item)).sort((a, b) => a.category.localeCompare(b.category));
 
-
-  let dates = data.map(function(post) {
+  let dates = data.map(function (post) {
     let [year, month] = post.created_at.split('-');
     return new Date(`${year}-${month}-01`);
   });
 
-  res.render('index', {
+  const navItem = data.find(data => data.category_slug === req.params.category_slug)
+
+  let slugCategoriesData = data.filter((category) => category.category_slug === req.params.category_slug)
+
+  res.render('categories', {
     title: 'She Code Queens',
     links: navigationLinks,
-    posts: data.filter((post) => !post.is_featured),
-    featuredPosts: data.filter((post) => post.is_featured),
-    archives: Array.from(new Set(dates))
+    posts: slugCategoriesData,
+    navItem: navItem,
+    archives: Array.from(new Set(dates)),
   });
-
 });
 
 module.exports = router;
